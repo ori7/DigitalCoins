@@ -1,19 +1,17 @@
 $(document).ready(function () {
 
-    let allCoins = [];
+    getWithAjax('firstList');
 
     $("#searchButton").click(function (e) {
 
         e.preventDefault();
-
         const filterItems = (query) => {
             return allCoins.filter(el => el.name.toLowerCase().indexOf(query.toLowerCase()) > -1);
         };
-
         const newArray = (filterItems($("#searchInput").val()));
         $('#coin').empty();
         getList(newArray);
-
+        coinClick();
     });
 
     const coinTemplate = `
@@ -29,20 +27,6 @@ $(document).ready(function () {
         </div>
     `
 
-    getData(function (d) {
-
-        getList(d);
-
-    }, 'list');
-
-    function getList(array) {
-
-        for (let i = 0; i < array.length; i++) {
-            buildCoin(array[i]);
-        }
-
-    };
-
     function buildCoin(coin) {
 
         let template = coinTemplate;
@@ -50,7 +34,13 @@ $(document).ready(function () {
         template = template.replace("{{name}}", coin.name);
         template = template.replace(/{{id}}/g, coin.id);
         $("#coin").append(template);
+    };
 
+    function getList(array) {
+
+        for (let i = 0; i < array.length; i++) {
+            buildCoin(array[i]);
+        }
     };
 
     const collapseTemplate = `
@@ -69,25 +59,27 @@ $(document).ready(function () {
     function getCoin(coinData) {
 
         let template = collapseTemplate;
-        template = template.replace("{{image}}", coinData.image.small);
         template = template.replace("{{$}}", coinData.market_data.current_price.usd);
         template = template.replace("{{€}}", coinData.market_data.current_price.eur);
         template = template.replace("{{₪}}", coinData.market_data.current_price.ils);
+        template = template.replace("{{image}}", coinData.image.small);
 
         const coin = $('#collapse-content-' + coinData.id);
         coin.empty();
         coin.append(template);
     };
 
+    var allCoins = [];
+
     function getData(callback, toGet) {
 
-        if (toGet === 'list') {
-            //var url = 'https://api.coingecko.com/api/v3/coins/list';
-            var url = 'demo.json';
+        if (toGet === 'firstList' || toGet === 'list') {
+            var url = 'https://api.coingecko.com/api/v3/coins/list';
+            //var url = 'demo.json';
         }
         else {
-            //var url = 'https://api.coingecko.com/api/v3/coins/' + toGet;
-            var url = 'demoB.json';
+            var url = 'https://api.coingecko.com/api/v3/coins/' + toGet;
+            //var url = 'demoB.json';
         }
 
         $.ajax({
@@ -96,42 +88,68 @@ $(document).ready(function () {
         }).done(function (d) {
             if (typeof d === 'string')
                 d = JSON.parse(d);
-            allCoins = d;
+            if (toGet === 'firstList')
+                allCoins = d;
             callback(d);
-            let times = [];
-            $('#coin>.card>.card-body>button').click(function (e) {
-                e.preventDefault();
-                const lastClick = (new Date()).getTime();
-                const index = times.findIndex(x => x.coinId === this.id);
-                if (index == -1) {
-                    getData(function (d) {
-                        getCoin(d);
-                    }, this.id);
-                    times.push({
-                        lastClick: lastClick,
-                        coinId: this.id
-                    });
-                }
-                else {
-                    if ((lastClick - times[index].lastClick) / 1000 > 10) { // pass 10 second
-                        getData(function (d) {
-                            getCoin(d);
-                        }, this.id);
-                    }
-                    times[index].lastClick = lastClick;
-                }
-            });
-        })
+            coinClick();
+        });
+    };
+
+    var times = [];
+
+    function coinClick() {
+
+        $('#coin>.card>.card-body>button').click(function (e) {
+            e.preventDefault();
+            const id = this.id;
+            const lastClick = (new Date()).getTime();
+            const index = times.findIndex(coin => coin.coinId === id);
+            if (index == -1) {
+                getWithAjax(id);
+                times.push({
+                    lastClick: lastClick,
+                    coinId: id
+                });
+            }
+            else {
+                if ((lastClick - times[index].lastClick) / 1000 > 10)  // pass 10 second
+                    getWithAjax(id);
+                times[index].lastClick = lastClick;
+            };
+            buttonName(id);
+        });
+    };
+
+    function getWithAjax(toGet) {
+
+        getData(function (d) {
+            if (toGet === 'firstList' || toGet === 'list')
+                getList(d);
+            else
+                getCoin(d);
+        }, toGet);
+    }
+
+    function buttonName(id) {
+
+        var isExpanded = $('#' + id).attr("aria-expanded");
+        switch (isExpanded) {
+            case 'false':
+                $('#' + id).text('Close');
+                break;
+            case 'true':
+                $('#' + id).text('More Info');
+                break;
+        };
     };
 
     $('#navbarSupportedContent>ul>li>a').click(function (e) {
+
         e.preventDefault();
         const href = $(this).attr('href');
         $.ajax(`templates/${href}.html`).done(function (htmlContent) {
             $('#main').html(htmlContent);
-            getData(function (d) {
-                getList(d);
-            }, 'list');
-        })
+            getWithAjax('list');
+        });
     });
-})
+});

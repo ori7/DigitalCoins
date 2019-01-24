@@ -1,17 +1,32 @@
 $(document).ready(function () {
 
-    getWithAjax('firstList');
+    getWithAjax('list');
 
     $("#searchButton").click(function (e) {
 
         e.preventDefault();
-        const filterItems = (query) => {
-            return allCoins.filter(el => el.name.toLowerCase().indexOf(query.toLowerCase()) > -1);
+        //  Search for all matches:
+        /*      
+        const filterCoins = (query) => {
+            return allCoins.filter(coin => coin.symbol.toLowerCase().indexOf(query.toLowerCase()) > -1);
         };
-        const newArray = (filterItems($("#searchInput").val()));
+        const filterCoinsArray = (filterCoins($("#searchInput").val()));
         $('#coin').empty();
-        getList(newArray);
+        getList(filterCoinsArray);
         coinClick();
+        */
+
+        //  Search for exact symbol:
+        const coin = allCoins.find(x => x.symbol === $("#searchInput").val().toLowerCase());
+        if (coin) {
+            $('#coin').empty();
+            buildCoin(coin);
+            coinClick();
+        }
+        else
+            alert('The coin not found!, Try again!');
+        $("#searchInput").val('');
+
     });
 
     const coinTemplate = `
@@ -22,7 +37,8 @@ $(document).ready(function () {
                     <button id="{{id}}" class="btn btn-primary" data-toggle="collapse" data-target="#collapse-{{id}}" aria-expanded="false" aria-controls="collapseExample">More Info</button>
                 </div>
             <div class="collapse" id="collapse-{{id}}">
-                <div class="card card-body" id="collapse-content-{{id}}"></div>
+                <div class="card card-body" id="collapse-content-{{id}}">
+                </div>
             </div>
         </div>
     `
@@ -73,7 +89,7 @@ $(document).ready(function () {
 
     function getData(callback, toGet) {
 
-        if (toGet === 'firstList' || toGet === 'list') {
+        if (toGet === 'list') {
             var url = 'https://api.coingecko.com/api/v3/coins/list';
             //var url = 'demo.json';
         }
@@ -88,7 +104,7 @@ $(document).ready(function () {
         }).done(function (d) {
             if (typeof d === 'string')
                 d = JSON.parse(d);
-            if (toGet === 'firstList')
+            if (toGet === 'list')
                 allCoins = d;
             callback(d);
             coinClick();
@@ -123,7 +139,7 @@ $(document).ready(function () {
     function getWithAjax(toGet) {
 
         getData(function (d) {
-            if (toGet === 'firstList' || toGet === 'list')
+            if (toGet === 'list')
                 getList(d);
             else
                 getCoin(d);

@@ -82,6 +82,7 @@ $(document).ready(function () {
         </div>
     `
 
+    var objectData = [];
     function getCollapse(coinData) {
 
         let template = collapseTemplate;
@@ -91,7 +92,8 @@ $(document).ready(function () {
         template = template.replace("{{image}}", coinData.image.small);
 
         const coin = $('#collapse-content-' + coinData.id);
-        //coin.empty();
+
+        coin.empty();console.log('pp');    //    Delite the old data before paste the new data
         coin.append(template);
     };
 
@@ -119,11 +121,14 @@ $(document).ready(function () {
         }).done(function (d) {
             if (typeof d === 'string')
                 d = JSON.parse(d);
-            if (toGet === 'list')
+            if (toGet === 'list') {
                 allCoins = d;
-            callback(d);
-            coinClick();
-            switchButton();
+                callback(d);
+                coinClick();
+                switchButton();
+            }
+            else
+                callback(d);
         });
     };
 
@@ -145,7 +150,7 @@ $(document).ready(function () {
             }
             else {
                 if ((lastClick - times[index].lastClick) / 1000 > 10)  // pass 10 second
-                    getWithAjax(id);
+                    getWithAjax(id);    //    Get new data from the server 
                 times[index].lastClick = lastClick;
             };
             buttonName(id);
@@ -192,15 +197,15 @@ $(document).ready(function () {
             else
                 switchArray.splice($.inArray(this.id, switchArray), 1);
         });
-    }
+    };
 
     function keepToggleButton() {
         if (switchArray) {
             for (let i = 0; i < switchArray.length; i++) {
                 $('#' + (switchArray[i].toLowerCase())).click();
-            }
-        }
-    }
+            };
+        };
+    };
 
     const templateWindow = `
         <form class="container" id="form">
@@ -258,8 +263,9 @@ $(document).ready(function () {
         reports = [];
         for (let i = 0; i < reportsArray.length; i++) {
             const coin = reportsArray[i][0];
+            const price = reportsArray[i][1].USD;
             var objectPrice = {};
-            objectPrice[coin] = { x: new Date().toLocaleTimeString(), y: reportsArray[i][1].USD };
+            objectPrice[coin] = { x: new Date().toLocaleTimeString(), y: price };
             reports.push(objectPrice);
         }; console.log(reports);
     };
@@ -275,15 +281,23 @@ $(document).ready(function () {
             $('#main').html(htmlContent);
             if (href === 'home')
                 getWithAjax('list');
-            if (href === 'reports') {
-                if (switchArray.length == 0)
-                    alert('There are no coins to display!');
-                else {
-                    interval = setInterval(function () {
-                        getWithAjax(switchArray);
-                    }, 2000);
-                }
-            }
+            else {
+                $("#searchForm").remove();   //   Remove search option from the page
+                if (href === 'reports') {
+                    if (switchArray.length == 0) {
+                        alert('There are no coins to display!');
+                        $.ajax(`templates/home.html`).done(function (htmlContent) {
+                            $('#main').html(htmlContent);
+                            getWithAjax('list');
+                        });
+                    }
+                    else {
+                        interval = setInterval(function () {
+                            getWithAjax(switchArray);
+                        }, 2000);
+                    };
+                };
+            };
         });
     });
 });

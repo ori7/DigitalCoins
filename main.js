@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    getWithAjax('list');
+    getWithAjax('list');     //   Get all coins when the page loaded
 
     $("#searchButton").click(function (e) {
 
@@ -17,7 +17,7 @@ $(document).ready(function () {
         */
 
         //  Search for exact symbol:
-        const coin = allCoins.find(x => x.symbol === $("#searchInput").val().toLowerCase());
+        const coin = allCoins.find(x => x.symbol === $("#searchInput").val().toLowerCase());   //  The symbol of the coin is in lowercase, so for the search work well we will lower the letters
         if (coin) {
             $('#coin').empty();
             buildCoin(coin);
@@ -26,7 +26,7 @@ $(document).ready(function () {
         }
         else
             alert('The coin not found!, Try again!');
-        $("#searchInput").val('');
+        $("#searchInput").val('');   //   Clean the input
 
     });
 
@@ -40,7 +40,7 @@ $(document).ready(function () {
                 </div>
                 <div class="col-sm-4">
                     <label class="switch">
-                        <input type="checkbox" class="default" id="{{symbol}}">
+                        <input type="checkbox" class="default" id="coin-{{symbol}}">
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -66,6 +66,7 @@ $(document).ready(function () {
         for (let i = 0; i < array.length; i++) {
             buildCoin(array[i]);
         }
+        keepToggleButton();    //    Activates a function that maintains the status of the toggele buttons
     };
 
     const collapseTemplate = `
@@ -81,7 +82,7 @@ $(document).ready(function () {
         </div>
     `
 
-    function getCoin(coinData) {
+    function getCollapse(coinData) {
 
         let template = collapseTemplate;
         template = template.replace("{{$}}", coinData.market_data.current_price.usd);
@@ -90,7 +91,7 @@ $(document).ready(function () {
         template = template.replace("{{image}}", coinData.image.small);
 
         const coin = $('#collapse-content-' + coinData.id);
-        coin.empty();
+        //coin.empty();
         coin.append(template);
     };
 
@@ -102,7 +103,12 @@ $(document).ready(function () {
             //var url = 'https://api.coingecko.com/api/v3/coins/list';
             var url = 'demo.json';
         }
-        else {
+        else if (Array.isArray(toGet)) {
+            let coins = (toGet.join()).toUpperCase();  //   Get all the coins from the array and convert them into one string in capital letters. 
+            coins = coins.replace(/COIN-/g, '');    //   Delete from the array prefix that not needed..
+            var url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + coins + '&tsyms=USD';
+        }
+        else {     //    The variable that passed is 'id'
             var url = 'https://api.coingecko.com/api/v3/coins/' + toGet;
             //var url = 'demoB.json';
         }
@@ -126,7 +132,7 @@ $(document).ready(function () {
     function coinClick() {
 
         $('#coin>.card>.card-body button').click(function (e) {
-            e.preventDefault(); console.log(this);
+            e.preventDefault();
             const id = this.id;
             const lastClick = (new Date()).getTime();
             const index = times.findIndex(coin => coin.coinId === id);
@@ -151,8 +157,10 @@ $(document).ready(function () {
         getData(function (d) {
             if (toGet === 'list')
                 getList(d);
+            else if (Array.isArray(toGet))
+                getReports(d);
             else
-                getCoin(d);
+                getCollapse(d);
         }, toGet);
     }
 
@@ -176,14 +184,22 @@ $(document).ready(function () {
         $('#coin>.card>.card-body .switch>.default').change(function (e) {
             e.preventDefault();
             if (this.checked) {
-                if (switchArray.length < 5) 
+                if (switchArray.length < 5)
                     switchArray.push(this.id);
-                else 
+                else
                     openWindow(this.id);
             }
-            else 
-                switchArray.splice( $.inArray(this.id, switchArray), 1 );
+            else
+                switchArray.splice($.inArray(this.id, switchArray), 1);
         });
+    }
+
+    function keepToggleButton() {
+        if (switchArray) {
+            for (let i = 0; i < switchArray.length; i++) {
+                $('#' + (switchArray[i].toLowerCase())).click();
+            }
+        }
     }
 
     const templateWindow = `
@@ -229,19 +245,45 @@ $(document).ready(function () {
         $w.find("#removeButton").click(function (e) {
             e.preventDefault();
             const coinRemove = $w.find('input[name=report]:checked', '#Form').val();
-            switchArray.splice( $.inArray(coinRemove, switchArray), 1 );
+            switchArray.splice($.inArray(coinRemove, switchArray), 1);
             switchArray.push(coinToAdd);
-            console.log(switchArray);
+            $('#' + coinRemove).click();
+            switchArray.push(coinToAdd);  //  The click delete the latest from the array so we need to add him another time! 
         });
-    }
+    };
+
+    function getReports(reportsObject) {
+
+        const reportsArray = Object.entries(reportsObject);
+        reports = [];
+        for (let i = 0; i < reportsArray.length; i++) {
+            const coin = reportsArray[i][0];
+            var objectPrice = {};
+            objectPrice[coin] = { x: new Date().toLocaleTimeString(), y: reportsArray[i][1].USD };
+            reports.push(objectPrice);
+        }; console.log(reports);
+    };
+
+    var interval;
 
     $('#navbarSupportedContent>ul>li>a').click(function (e) {
-
         e.preventDefault();
+        if (interval)
+            clearInterval(interval);
         const href = $(this).attr('href');
         $.ajax(`templates/${href}.html`).done(function (htmlContent) {
             $('#main').html(htmlContent);
-            getWithAjax('list');
+            if (href === 'home')
+                getWithAjax('list');
+            if (href === 'reports') {
+                if (switchArray.length == 0)
+                    alert('There are no coins to display!');
+                else {
+                    interval = setInterval(function () {
+                        getWithAjax(switchArray);
+                    }, 2000);
+                }
+            }
         });
     });
 });

@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    getWithAjax('list');     //   Get all coins when the page loaded
+    getWithAjax('allCoins');     //   Get all coins when the page loaded
 
     $("#searchButton").click(function (e) {
 
@@ -52,7 +52,7 @@ $(document).ready(function () {
                 </div>
             </div>
         </div>
-    `
+    `;
 
     function buildCoin(coin) {
 
@@ -85,11 +85,11 @@ $(document).ready(function () {
                 <img src="{{image}}">
             </div>
         </div>
-    `
+    `;
 
     function getData(callback, toGet) {
 
-        if (toGet === 'list') {
+        if (toGet === 'allCoins') {
             //var url = 'https://api.coingecko.com/api/v3/coins/list';
             var url = 'demo.json';
         }
@@ -101,7 +101,7 @@ $(document).ready(function () {
         else {     //    The variable that passed is 'id'
             var url = 'https://api.coingecko.com/api/v3/coins/' + toGet;
             //var url = 'demoB.json';
-        }
+        };
 
         $.ajax({
             url: url,
@@ -110,7 +110,7 @@ $(document).ready(function () {
             if (typeof d === 'string')
                 d = JSON.parse(d);
             callback(d);
-            if (toGet === 'list') {
+            if (toGet === 'allCoins') {
                 const index = arrayObjectsData.findIndex(x => x.coinId === 'allCoins');
                 if (index != -1) {
                     arrayObjectsData[index].content = d;
@@ -118,7 +118,7 @@ $(document).ready(function () {
                 }
                 else
                     arrayObjectsData.push({ lastClick: new Date().getTime(), coinId: 'allCoins', content: d });
-            }
+            };
         });
     };
 
@@ -152,10 +152,11 @@ $(document).ready(function () {
                     arrayObjectsData.push({
                         lastClick: lastClick,
                         coinId: id
-                    });
+                    });console.log('in');
                     getWithAjax(id);
                 }
                 else {
+                    cleanCoin(id);
                     const result = checkTime(id, 10);    //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
                     getContent(result, id, index);
                 };
@@ -166,14 +167,14 @@ $(document).ready(function () {
     function getWithAjax(toGet) {
 
         getData(function (d) {
-            if (toGet === 'list')
+            if (toGet === 'allCoins')
                 getList(d);
             else if (Array.isArray(toGet))
                 getReports(d);
             else
                 getCollapse(d);
         }, toGet);
-    }
+    };
 
     function buttonName(id) {
 
@@ -240,7 +241,7 @@ $(document).ready(function () {
             <button onclick="window.close()" id="removeButton">Remove</button>
             <button onclick="window.close()">Cancle</button>
         </form>
-        `
+        `;
 
     function openWindow(coinToAdd) {
 
@@ -264,19 +265,6 @@ $(document).ready(function () {
         });
     };
 
-    function getReports(reportsObject) {
-
-        const reportsArray = Object.entries(reportsObject);
-        reports = [];
-        for (let i = 0; i < reportsArray.length; i++) {
-            const coin = reportsArray[i][0];
-            const price = reportsArray[i][1].USD;
-            var objectPrice = {};
-            objectPrice[coin] = { x: new Date().toLocaleTimeString(), y: price };
-            reports.push(objectPrice);
-        }; console.log(reports);
-    };
-
     var interval;
 
     $('#navbarSupportedContent>ul>li>a').click(function (e) {
@@ -288,8 +276,8 @@ $(document).ready(function () {
             $('#main').html(htmlContent);
             if (href === 'home') {
                 const result = checkTime('allCoins', 5);
-                const index = arrayObjectsData.findIndex(object => object.coinId === 'allCoins');
-                getContent(result, 'list', index);
+                //const index = arrayObjectsData.findIndex(object => object.coinId === 'allCoins');
+                getContent(result, 'allCoins');
             }
             else {
                 $("#searchForm").prop('hidden', 'hidden');   //   Hide search option from the page
@@ -317,23 +305,32 @@ $(document).ready(function () {
             return 'ajax';
         else
             return 'cache';
-    }
+    };
 
-    function getContent(from, toGet, index) {
+    function getContent(from, toGet) {
 
-        if (toGet != 'list') {
-            var coin = $('#collapse-content-' + toGet);
-            coin.empty();   //    Delite the old data before get the new data
-        }
+        const index = arrayObjectsData.findIndex(x => x.coinId === toGet);
         if (from === 'ajax') {
             getWithAjax(toGet);
             arrayObjectsData[index].lastClick = new Date().getTime();  //   Updating the last click
         }
         else {
-            if (toGet === 'list')
-                getList(arrayObjectsData[index].content);
-            else
-                coin.append(arrayObjectsData[index].content);
-        }
-    }
+            getFromCache(toGet, index);
+        };
+    };
+
+    function getFromCache(toGet, index) {
+        if (toGet === 'allCoins')
+            getList(arrayObjectsData[index].content);
+        else {
+            var coin = $('#collapse-content-' + toGet);
+            coin.append(arrayObjectsData[index].content);
+        };
+    };
+
+    function cleanCoin(coinToClean){
+        var coin = $('#collapse-content-' + coinToClean);
+        coin.empty();   //    Delite the old data before get the new data
+    };
+
 });

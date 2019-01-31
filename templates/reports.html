@@ -1,141 +1,242 @@
 <script>
-	console.log(window.reports);
-	(function () {
-		reports();
-		function reports() {
 
-			var options = {
-				exportEnabled: true,
-				animationEnabled: true,
-				title: {
-					text: "Digital coins"
-				},
-				subtitles: [{
-					text: "Click Legend to Hide or Unhide Data Series"
-				}],
-				axisX: {
-					title: "States"
-				},
-				toolTip: {
-					shared: true
-				},
-				legend: {
-					cursor: "pointer",
-					itemclick: toggleDataSeries
-				}
-			};
-			const coinsArray = [
-				{
-					title: "Units Sold",
-					titleFontColor: "#4F81BC",
-					lineColor: "#4F81BC",
-					labelFontColor: "#4F81BC",
-					tickColor: "#4F81BC",
-					includeZero: false
-				},
-				{
-					title: "Profit in USD",
-					titleFontColor: "#C0504E",
-					lineColor: "#C0504E",
-					labelFontColor: "#C0504E",
-					tickColor: "#C0504E",
-					includeZero: false
-				},
-				{
-					title: "xxxxxxxxxxxxxxxxxx",
-					titleFontColor: "#C3304E",
-					lineColor: "#C0504E",
-					labelFontColor: "#C0504E",
-					tickColor: "#C0504E",
-					includeZero: false
-				}
-			];
+        var saveData = [];
 
-			const cointsData = [{
-				type: "spline",
-				name: "Units Sold",
-				showInLegend: true,
-				xValueFormatString: "MMM YYYY",
-				yValueFormatString: "#,##0 Units",
-				dataPoints: [
-					{ x: new Date(2016, 0, 1), y: 120 },
-					{ x: new Date(2016, 1, 1), y: 135 },
-					{ x: new Date(2016, 2, 1), y: 144 },
-					{ x: new Date(2016, 3, 1), y: 103 },
-					{ x: new Date(2016, 4, 1), y: 93 },
-					{ x: new Date(2016, 5, 1), y: 129 },
-					{ x: new Date(2016, 6, 1), y: 143 },
-					{ x: new Date(2016, 7, 1), y: 156 },
-					{ x: new Date(2016, 8, 1), y: 122 },
-					{ x: new Date(2016, 9, 1), y: 106 },
-					{ x: new Date(2016, 10, 1), y: 137 },
-					{ x: new Date(2016, 11, 1), y: 142 }
-				]
-			},
-			{
-				type: "spline",
-				name: "Profit",
-				axisYType: "secondary",
-				showInLegend: true,
-				xValueFormatString: "MMM YYYY",
-				yValueFormatString: "$#,##0.#",
-				dataPoints: [
-					{ x: new Date(2016, 0, 1), y: 19034.5 },
-					{ x: new Date(2016, 1, 1), y: 20015 },
-					{ x: new Date(2016, 2, 1), y: 27342 },
-					{ x: new Date(2016, 3, 1), y: 20088 },
-					{ x: new Date(2016, 4, 1), y: 20234 },
-					{ x: new Date(2016, 5, 1), y: 29034 },
-					{ x: new Date(2016, 6, 1), y: 30487 },
-					{ x: new Date(2016, 7, 1), y: 32523 },
-					{ x: new Date(2016, 8, 1), y: 20234 },
-					{ x: new Date(2016, 9, 1), y: 27234 },
-					{ x: new Date(2016, 10, 1), y: 33548 },
-					{ x: new Date(2016, 11, 1), y: 32534 }
-				]
-			}, {
-				type: "spline",
-				name: "Profit",
-				axisYType: "secondary",
-				showInLegend: true,
-				xValueFormatString: "MMM YYYY",
-				yValueFormatString: "$#,##0.#",
-				dataPoints: [
-					{ x: new Date(2016, 0, 1), y: 123123.5 },
-					{ x: new Date(2016, 1, 1), y: 2323 },
-					{ x: new Date(2016, 2, 1), y: 2323 },
-					{ x: new Date(2016, 3, 1), y: 222 },
-					{ x: new Date(2016, 4, 1), y: 456 },
-					{ x: new Date(2016, 5, 1), y: 29034 },
-					{ x: new Date(2016, 6, 1), y: 30487 },
-					{ x: new Date(2016, 7, 1), y: 32523 },
-					{ x: new Date(2016, 8, 1), y: 20234 },
-					{ x: new Date(2016, 9, 1), y: 27234 },
-					{ x: new Date(2016, 10, 1), y: 33548 },
-					{ x: new Date(2016, 11, 1), y: 32534 }
-				]
-			}];
+        function getReports(reportsObject) { 
 
-			options['data'] = cointsData;
-			for (let i = 0; i < coinsArray.length; i++) {
-				options['axisY' + i] = coinsArray[i];
-			}
+            const reportsArray = Object.entries(reportsObject);
 
-			$("#chartContainer").CanvasJSChart(options);
+            if (saveData.length === 0)
+                showReports(reportsArray);
 
-			function toggleDataSeries(e) {
-				if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-					e.dataSeries.visible = false;
-				} else {
-					e.dataSeries.visible = true;
-				}
-				e.chart.render();
-			}
+            for (let i = 0; i < reportsArray.length; i++) {
+                const coin = reportsArray[i][0];
+                const price = reportsArray[i][1].USD;
+                const priceNow = { 'x': new Date(), 'y': price }
+                saveData[i].dataPoints.push(priceNow);
+            }
+        };
 
-		}
-	}());
+        function showReports(reportsArray){
 
+            var options = {
 
+                data: saveData,
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Digital coins"
+                },
+                subtitles: [{
+                    text: "Click Legend to Hide or Unhide Data Series"
+                }],
+                axisX: {
+                    title: "Time"
+                },
+                axisY: {
+                    title: "Price in USD",
+                    titleFontColor: "#4F81BC",
+                    lineColor: "#4F81BC",
+                    labelFontColor: "#4F81BC",
+                    tickColor: "#4F81BC",
+                    includeZero: false
+                },
+                axisY2: {
+                    title: "Price",
+                    titleFontColor: "#C0504E",
+                    lineColor: "#C0504E",
+                    labelFontColor: "#C0504E",
+                    tickColor: "#C0504E",
+                    includeZero: false
+                },
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                }
+            };
+
+            for (let i = 0; i < reportsArray.length; i++) {
+
+                const coin = reportsArray[i][0];
+
+                let templateData = `{
+                    "type": "spline",
+                    "name": "{{name}}",
+                    "showInLegend": "true",
+                    "xValueFormatString": "",
+                    "yValueFormatString": "",
+                    "dataPoints": [
+                    ]
+                }`;
+
+                templateData = templateData.replace("{{name}}", coin);
+                templateData =JSON.parse(templateData);
+                saveData.push(templateData);
+            }
+
+            chart = new CanvasJS.Chart( "chartContainer", options);
+
+            function toggleDataSeries(e) {
+                if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                    e.dataSeries.visible = false;
+                } else {
+                    e.dataSeries.visible = true;
+                }
+                e.chart.render();
+            };
+
+            setInterval(() => {
+                chart.render();
+            }, 1000);
+        }    
 </script>
 
 <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+
+
+<script>/*
+                var saveData = [];
+                var one = [];
+        
+                function reports(report) { 
+        
+                        var chart = new CanvasJS.Chart( "chartContainer", {
+                            data: [],
+                            exportEnabled: true,
+                            animationEnabled: true,
+                            title: {
+                                text: "Digital coins"
+                            },
+                            subtitles: [{
+                                text: "Click Legend to Hide or Unhide Data Series"
+                            }],
+                            axisX: {
+                                title: "Coins"
+                            },
+                            axisY: {
+                                title: "Price",
+                                titleFontColor: "#4F81BC",
+                                lineColor: "#4F81BC",
+                                labelFontColor: "#4F81BC",
+                                tickColor: "#4F81BC",
+                                includeZero: false
+                            },
+                            axisY2: {
+                                title: "Price in USD",
+                                titleFontColor: "#C0504E",
+                                lineColor: "#C0504E",
+                                labelFontColor: "#C0504E",
+                                tickColor: "#C0504E",
+                                includeZero: false
+                            },
+                            toolTip: {
+                                shared: true
+                            },
+                            legend: {
+                                cursor: "pointer",
+                                itemclick: toggleDataSeries
+                            }
+                        });
+
+                        var coinsA ='';
+                        for (let i = 0; i < report.length; i++) {
+            
+                            const coin = Object.keys(report[i]);
+                            coinsA += coin;
+                            if (i != report.length - 1)
+                                coinsA += ',';
+                            //const priceNow = report[i][coin];
+                            //saveData[i].dataPoints.push(priceNow);
+                        }
+                        setInterval(function () {
+                        getData2(function(d){
+                            const reportsArray = editArray(d);
+                            if (one.length === 0){
+                                var oneTimeA = oneTime(reportsArray);
+                                chart.options.data = oneTimeA;console.log(chart.options.data);}
+                            var allTimeA = allTime(reportsArray);
+                            for (let i = 0; i < allTimeA.length; i++) {
+                                chart.options.data[i].dataPoints.push(allTimeA[i]);
+                            }
+                            chart.render();
+                            one.push(7);
+                        },coinsA)},2000);
+                };
+
+                function editArray(reportsObject){
+                    const reportsArray = Object.entries(reportsObject);
+                    coinReport = [];
+                    for (let i = 0; i < reportsArray.length; i++) {
+                        const coin = reportsArray[i][0];
+                        const price = reportsArray[i][1].USD;
+                        var objectPrice = {};
+                        objectPrice[coin] = { 'x': new Date(), 'y': price };
+                        coinReport.push(objectPrice);
+                    };
+                    return(coinReport);
+                }
+
+                function getData2(callback, coinsA){
+                            var url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + coinsA + '&tsyms=USD';
+
+                            $.ajax({
+                                url: url,
+                                method: 'GET'
+                            }).done(function (d) {
+                                if (typeof d === 'string')
+                                    d = JSON.parse(d);
+                                callback(d);
+                            });
+                        }
+
+                    function oneTime(report){
+                        var myArray = [];
+                        for (let i = 0; i < report.length; i++) {
+            
+                            const coin = Object.keys(report[i]);
+                            const priceNow = report[i][coin];
+            
+                            let templateData = `{
+                                "type": "spline",
+                                "name": "{{name}}",
+                                "showInLegend": "true",
+                                "xValueFormatString": "",
+                                "yValueFormatString": "",
+                                "dataPoints": [
+                                ]
+                            }`;
+                            templateData = templateData.replace("{{name}}", coin);
+                            templateData =JSON.parse(templateData);
+                            myArray.push(templateData);
+                        }
+                        return myArray;
+                    }
+
+                    function allTime(report){
+
+                        var myArray = [];
+                        for (let i = 0; i < report.length; i++) {
+
+                            const coin = Object.keys(report[i]);
+                            const priceNow = report[i][coin];
+                            myArray.push(priceNow);
+                        }
+                        return myArray;
+                    }
+        
+                    //$("#chartContainer").CanvasJSChart(options);        
+        
+                    function toggleDataSeries(e) {
+                        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                            e.dataSeries.visible = false;
+                        } else {
+                            e.dataSeries.visible = true;
+                        }
+                        e.chart.render();
+                    };
+        */
+        </script>
+        

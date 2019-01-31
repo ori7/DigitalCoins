@@ -5,8 +5,8 @@ $(document).ready(function () {
     function getData(callback, toGet) {
 
         if (toGet === 'allCoins') {
-            //var url = 'https://api.coingecko.com/api/v3/coins/list';
-            var url = 'demo.json';
+            var url = 'https://api.coingecko.com/api/v3/coins/list';
+            //var url = 'demo.json';
         }
         else if (Array.isArray(toGet)) {
             let coins = (toGet.join()).toUpperCase();  //   Get all the coins from the array and convert them into one string in capital letters. 
@@ -54,7 +54,7 @@ $(document).ready(function () {
     $("#searchButton").click(function (e) {
 
         e.preventDefault();
-        const allCoins = arrayObjectsData.find(x => x.coinId === "allCoins");
+        const allCoins = arrayObjectsData.find(x => x.coinId === "allCoins");   
 
         //  Search for all matches:
         /*
@@ -68,7 +68,6 @@ $(document).ready(function () {
         */
 
         //  Search for exact symbol:
-        const allCoins = arrayObjectsData.find(x => x.coinId === "allCoins");
         const coin = allCoins.content.find(x => x.symbol === $("#searchInput").val().toLowerCase());   //  The symbol of the coin is in lowercase, so for the search work well we will lower the letters
         if (coin) {
             $('#coin').empty();
@@ -78,7 +77,7 @@ $(document).ready(function () {
         }
         else
             alert('The coin not found!, Try again!');
-        $("#searchInput").val('');   //   Clean the input
+        $("#searchInput").val('');   //   Clean the input  
     });
 
     const coinTemplate = `
@@ -214,16 +213,15 @@ $(document).ready(function () {
             getWithAjax(toGet);
             arrayObjectsData[index].lastClick = new Date().getTime();  //   Updating the last click
         }
-        else {
+        else 
             getFromCache(toGet, index);
-        };
     };
 
     function getFromCache(toGet, index) {
         if (toGet === 'allCoins')
             getList(arrayObjectsData[index].content);
         else {
-            var coin = $('#collapse-content-' + toGet);
+            const coin = $('#collapse-content-' + toGet);
             coin.append(arrayObjectsData[index].content);
         };
     };
@@ -314,7 +312,7 @@ $(document).ready(function () {
         $.ajax(`templates/${href}.html`).done(function (htmlContent) {
             $('#main').html(htmlContent);
             if (href === 'home') {
-                const result = checkTime('allCoins', 5);   //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
+                const result = checkTime('allCoins', 20);   //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
                 getContent(result, 'allCoins');
             }
             else {

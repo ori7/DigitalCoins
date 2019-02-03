@@ -6,7 +6,7 @@
 
         if (Object.values(reportsObject).indexOf('Error') > -1) {
             alert('Sorry, There are no data!');
-            $("a[href='home']").click();
+            $("a[href='home']").click();    //   Return to home page
         }
         else {
             const reportsArray = Object.entries(reportsObject);
@@ -21,6 +21,8 @@
                 saveData[i].dataPoints.push(priceNow);    //   Update the global variable with new data every time it comes
             };
         };
+
+
     };
 
     function showReports(reportsArray) {
@@ -94,11 +96,15 @@
             e.chart.render();
         };
 
+        $('.midlle').remove();
+
         setInterval(() => {
             chart.render();
         }, 2000);
+
     }
 
 </script>
 
+<div class="midlle loader"></div>
 <div id="chartContainer" style="height: 500px; width: 100%;"></div>

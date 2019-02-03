@@ -49,12 +49,23 @@ $(document).ready(function () {
         }, toGet);
     };
 
+    function loader() {
+        console.log('p');
+
+        //if ($('#coin').is(':empty') || $('#chartContainer').is(':empty') || $('.collapse>.card').is('empty')){console.log('e');
+        //    $('.midlle').addClass('loader');
+        //} 
+        //else
+        $('.midlle').removeClass('loader');
+
+    }
+
     getWithAjax('allCoins');     //   Get all coins when the page loaded
 
     $("#searchButton").click(function (e) {
 
         e.preventDefault();
-        const allCoins = arrayObjectsData.find(x => x.coinId === "allCoins");   
+        const allCoins = arrayObjectsData.find(x => x.coinId === "allCoins");
 
         //  Search for all matches:
         /*
@@ -96,8 +107,7 @@ $(document).ready(function () {
                 </div>
             </div>
             <div class="collapse" id="collapse-{{id}}">
-                <div class="card card-body" id="collapse-content-{{id}}">
-                </div>
+                <div class="card card-body" id="collapse-content-{{id}}"></div>                
             </div>
         </div>
     `;
@@ -120,6 +130,7 @@ $(document).ready(function () {
         coinClick();
         switchButton();   //    After 'keepToggleButton' function, need to activate this function, to listen to clicks on the switch Button.
         $("#searchForm").prop('hidden', false);    //   Show the search option in the list.
+        $('#main>.midlle').remove();
     };
 
     const collapseTemplate = `
@@ -146,6 +157,7 @@ $(document).ready(function () {
         const index = arrayObjectsData.findIndex(x => x.coinId === coinData.id);
         arrayObjectsData[index].content = template;   //  Save for the cache
 
+        loaderCollapse('remove', coinData.id);   //   Remove the animation of loading before append the content of the collapse.
         const coin = $('#collapse-content-' + coinData.id);
         coin.append(template);
     };
@@ -155,10 +167,11 @@ $(document).ready(function () {
         $('#coin>.card>.card-body button').click(function (e) {
             e.preventDefault();
             const id = this.id;
-            const collapseStatus = buttonName(id);   //   Change the text on the button and return the status of the collapse
+            const collapseStatus = buttonName(id);   //   Change the text on the button and return the status of the collapse.
             if (collapseStatus === 'false') {
+                loaderCollapse('add', id);   //   Add animation of loading until the content get
                 const lastClick = new Date().getTime();
-                const index = arrayObjectsData.findIndex(coin => coin.coinId === id);   //   Check if the data of the coin exists in the array
+                const index = arrayObjectsData.findIndex(coin => coin.coinId === id);   //   Check if the data of the coin exists in the array.
                 if (index == -1) {
                     arrayObjectsData.push({
                         lastClick: lastClick,
@@ -168,7 +181,7 @@ $(document).ready(function () {
                 }
                 else {
                     cleanCoin(id);
-                    const result = checkTime(id, 10);    //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
+                    const result = checkTime(id, 10);    //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds).
                     getContent(result, id);
                 };
             };
@@ -195,10 +208,22 @@ $(document).ready(function () {
         coin.empty();   //    Delite the old data before get the new data
     };
 
-    function checkTime(key, timeInSeconds) {
+    function loaderCollapse(act, id) {
+
+        switch (act) {
+            case 'add':
+                $('#collapse-' + id).parent().append('<div class="loaderCollapse mx-auto"></div>');
+                break;
+            case 'remove':
+                $('#collapse-' + id).parent().children().last().remove();
+                break;
+        };
+    }
+
+    function checkTime(element, timeInSeconds) {
 
         const timeNow = new Date().getTime();
-        const object = arrayObjectsData.find(array => array.coinId === key);
+        const object = arrayObjectsData.find(array => array.coinId === element);
         const difference = timeNow - object.lastClick;
         if (difference / 1000 > timeInSeconds)
             return 'ajax';
@@ -213,7 +238,7 @@ $(document).ready(function () {
             getWithAjax(toGet);
             arrayObjectsData[index].lastClick = new Date().getTime();  //   Updating the last click
         }
-        else 
+        else
             getFromCache(toGet, index);
     };
 
@@ -221,6 +246,7 @@ $(document).ready(function () {
         if (toGet === 'allCoins')
             getList(arrayObjectsData[index].content);
         else {
+            loaderCollapse('remove', toGet);    //   Remove the animation of loading before append the content of the collapse.
             const coin = $('#collapse-content-' + toGet);
             coin.append(arrayObjectsData[index].content);
         };
@@ -312,7 +338,7 @@ $(document).ready(function () {
         $.ajax(`templates/${href}.html`).done(function (htmlContent) {
             $('#main').html(htmlContent);
             if (href === 'home') {
-                const result = checkTime('allCoins', 20);   //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
+                const result = checkTime('allCoins', 5);   //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
                 getContent(result, 'allCoins');
             }
             else {

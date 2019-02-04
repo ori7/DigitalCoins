@@ -14,16 +14,19 @@
             if (saveData.length === 0)
                 showReports(reportsArray);   //   This function Should be activated only one time, when click on 'Live Reports', to upload the graph.
 
-            for (let i = 0; i < reportsArray.length; i++) {
-                const coin = reportsArray[i][0];
-                const price = reportsArray[i][1].USD;
-                const priceNow = { 'x': new Date(), 'y': price }
-                saveData[i].dataPoints.push(priceNow);    //   Update the global variable with new data every time it comes
-            };
+            saveDataPoints(reportsArray);
         };
-
-
     };
+
+    function saveDataPoints(reportsArray) {
+
+        for (let i = 0; i < reportsArray.length; i++) {
+            const coin = reportsArray[i][0];
+            const price = reportsArray[i][1].USD;
+            const priceNow = { 'x': new Date(), 'y': price }
+            saveData[i].dataPoints.push(priceNow);    //   Update the global variable with new data every time it comes
+        };
+    }
 
     function showReports(reportsArray) {
 
@@ -66,24 +69,7 @@
             }
         };
 
-        for (let i = 0; i < reportsArray.length; i++) {
-
-            const coin = reportsArray[i][0];
-
-            let templateData = `{
-                    "type": "spline",
-                    "name": "{{name}}",
-                    "showInLegend": "true",
-                    "xValueFormatString": "",
-                    "yValueFormatString": "",
-                    "dataPoints": [
-                    ]
-                }`;
-
-            templateData = templateData.replace("{{name}}", coin);
-            templateData = JSON.parse(templateData);
-            saveData.push(templateData);
-        }
+        templateReports(reportsArray);
 
         chart = new CanvasJS.Chart("chartContainer", options);
 
@@ -101,6 +87,28 @@
         setInterval(() => {
             chart.render();
         }, 2000);
+
+    }
+
+    function templateReports(reportsArray) {
+        for (let i = 0; i < reportsArray.length; i++) {
+
+            const coin = reportsArray[i][0];
+
+            let templateData = `{
+                "type": "spline",
+                "name": "{{name}}",
+                "showInLegend": "true",
+                "xValueFormatString": "",
+                "yValueFormatString": "",
+                "dataPoints": [
+                ]
+            }`;
+
+            templateData = templateData.replace("{{name}}", coin);
+            templateData = JSON.parse(templateData);
+            saveData.push(templateData);
+        }
 
     }
 

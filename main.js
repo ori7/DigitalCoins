@@ -1,5 +1,7 @@
 $(document).ready(function () {
 
+    getWithAjax('allCoins');     //   Get all coins when the page loaded
+
     var arrayObjectsData = [];
 
     function getData(callback, toGet) {
@@ -27,11 +29,11 @@ $(document).ready(function () {
             callback(d);
             if (toGet === 'allCoins') {
                 const index = arrayObjectsData.findIndex(x => x.coinId === 'allCoins');
-                if (index != -1) {
+                if (index != -1) {   //   The object 'allCoins' already exists, so we need only update it
                     arrayObjectsData[index].content = d;
                     arrayObjectsData[index].lastClick = new Date().getTime();
                 }
-                else
+                else    //   The object 'allCoins' does not exist yet, so we need to create it. 
                     arrayObjectsData.push({ lastClick: new Date().getTime(), coinId: 'allCoins', content: d });
             };
         });
@@ -49,37 +51,24 @@ $(document).ready(function () {
         }, toGet);
     };
 
-    function loader() {
-        console.log('p');
-
-        //if ($('#coin').is(':empty') || $('#chartContainer').is(':empty') || $('.collapse>.card').is('empty')){console.log('e');
-        //    $('.midlle').addClass('loader');
-        //} 
-        //else
-        $('.midlle').removeClass('loader');
-
-    }
-
-    getWithAjax('allCoins');     //   Get all coins when the page loaded
-
     $("#searchButton").click(function (e) {
 
         e.preventDefault();
-        const allCoins = arrayObjectsData.find(x => x.coinId === "allCoins");
+        const allCoinsArray = arrayObjectsData.find(x => x.coinId === "allCoins");
 
         //  Search for all matches:
         /*
-     const filterCoins = (query) => {
-         return allCoins.content.filter(coin => coin.symbol.toLowerCase().indexOf(query.toLowerCase()) > -1);
-     };
-     const filterCoinsArray = (filterCoins($("#searchInput").val()));
-     $('#coin').empty();
-     getList(filterCoinsArray);
-     coinClick();
+    const filterCoins = (query) => {
+        return allCoinsArray.content.filter(coin => coin.symbol.toLowerCase().indexOf(query.toLowerCase()) > -1);
+    };
+    const filterCoinsArray = (filterCoins($("#searchInput").val()));
+    $('#coin').empty();
+    getList(filterCoinsArray);
+    coinClick();
         */
 
         //  Search for exact symbol:
-        const coin = allCoins.content.find(x => x.symbol === $("#searchInput").val().toLowerCase());   //  The symbol of the coin is in lowercase, so for the search work well we will lower the letters
+        const coin = allCoinsArray.content.find(x => x.symbol === $("#searchInput").val().toLowerCase());   //  The symbol of the coin is in lowercase, so for the search work well we will lower the letters
         if (coin) {
             $('#coin').empty();
             buildCoin(coin);
@@ -130,7 +119,7 @@ $(document).ready(function () {
         coinClick();
         switchButton();   //    After 'keepToggleButton' function, need to activate this function, to listen to clicks on the switch Button.
         $("#searchForm").prop('hidden', false);    //   Show the search option in the list.
-        $('#main>.midlle').remove();
+        $('#main>.midlle').remove();     //     Stop the animation of 'loading'.
     };
 
     const collapseTemplate = `
@@ -172,7 +161,7 @@ $(document).ready(function () {
                 loaderCollapse('add', id);   //   Add animation of loading until the content get
                 const lastClick = new Date().getTime();
                 const index = arrayObjectsData.findIndex(coin => coin.coinId === id);   //   Check if the data of the coin exists in the array.
-                if (index == -1) {
+                if (index === -1) {
                     arrayObjectsData.push({
                         lastClick: lastClick,
                         coinId: id
@@ -181,7 +170,7 @@ $(document).ready(function () {
                 }
                 else {
                     cleanCoin(id);
-                    const result = checkTime(id, 10);    //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds).
+                    const result = checkTime(id, 2 * 60);    //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds).
                     getContent(result, id);
                 };
             };
@@ -205,7 +194,7 @@ $(document).ready(function () {
     function cleanCoin(coinToClean) {
 
         const coin = $('#collapse-content-' + coinToClean);
-        coin.empty();   //    Delite the old data before get the new data
+        coin.empty();   //    Delite the old data before get the new data.
     };
 
     function loaderCollapse(act, id) {
@@ -224,8 +213,8 @@ $(document).ready(function () {
 
         const timeNow = new Date().getTime();
         const object = arrayObjectsData.find(array => array.coinId === element);
-        const difference = timeNow - object.lastClick;
-        if (difference / 1000 > timeInSeconds)
+        const difference = (timeNow - object.lastClick) / 1000;   //   The times are in milliseconds, so if we multiply by 1000 we will get it in seconds.
+        if (difference > timeInSeconds)
             return 'ajax';
         else
             return 'cache';
@@ -309,10 +298,10 @@ $(document).ready(function () {
         const myWindow = window.open("", "MsgWindow", "width=400, height=300, top=300, left=300");
         myWindow.document.write(template);
 
-        const removeWindow = $(myWindow.document.body);
-        removeWindow.find("#removeCoinButton").click(function (e) {
+        const windowBody = $(myWindow.document.body);
+        windowBody.find("#removeCoinButton").click(function (e) {
             e.preventDefault();
-            const coinToRemove = removeWindow.find('input[name=report]:checked', '#Form').val();
+            const coinToRemove = windowBody.find('input[name=report]:checked', '#Form').val();
             switchArray.splice($.inArray(coinToRemove, switchArray), 1);
             switchArray.push(coinToAdd);
             $('#' + coinToRemove).click();   //   To cancel the previous click on the screen.
@@ -338,16 +327,30 @@ $(document).ready(function () {
         $.ajax(`templates/${href}.html`).done(function (htmlContent) {
             $('#main').html(htmlContent);
             if (href === 'home') {
-                const result = checkTime('allCoins', 5);   //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
+                parallax('add');
+                const result = checkTime('allCoins', 60);   //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds)
                 getContent(result, 'allCoins');
             }
             else {
                 $("#searchForm").prop('hidden', 'hidden');   //   Hide search option from the page
+                parallax('remove');
                 if (href === 'reports')
                     reportPage();
             };
         });
     });
+
+    function parallax(act) {
+
+        switch (act) {
+            case 'add':
+                $(".optionParallax").addClass('parallax');
+                break;
+            case 'remove':
+                $(".optionParallax").removeClass('parallax');
+                break;
+        };
+    }
 
     function reportPage() {
 

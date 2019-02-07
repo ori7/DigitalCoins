@@ -2,9 +2,26 @@ $(document).ready(function () {
 
     getWithAjax('allCoins');     //   Get all coins when the page loaded
 
-    var arrayObjectsData = [];
+    var arrayObjectsData = [];    //   This variable is designed to store all data (cache)
 
     function getData(callback, toGet) {
+
+        const url = buildUrl(toGet);
+
+        $.ajax({
+            url: url,
+            method: 'GET'
+        }).done(function (d) {
+            if (typeof d === 'string')
+                d = JSON.parse(d);
+            callback(d);
+            if (!Array.isArray(toGet)) {
+                saveForCache(toGet, d);
+            };
+        });
+    };
+
+    function buildUrl(toGet){
 
         if (toGet === 'allCoins') {
             var url = 'https://api.coingecko.com/api/v3/coins/list';
@@ -19,24 +36,18 @@ $(document).ready(function () {
             var url = 'https://api.coingecko.com/api/v3/coins/' + toGet;
             //var url = 'demoB.json';
         };
+        return url;
+    };
 
-        $.ajax({
-            url: url,
-            method: 'GET'
-        }).done(function (d) {
-            if (typeof d === 'string')
-                d = JSON.parse(d);
-            callback(d);
-            if (toGet === 'allCoins') {
-                const index = arrayObjectsData.findIndex(x => x.coinId === 'allCoins');
-                if (index != -1) {   //   The object 'allCoins' already exists, so we need only update it
-                    arrayObjectsData[index].content = d;
-                    arrayObjectsData[index].lastClick = new Date().getTime();
-                }
-                else    //   The object 'allCoins' does not exist yet, so we need to create it. 
-                    arrayObjectsData.push({ lastClick: new Date().getTime(), coinId: 'allCoins', content: d });
-            };
-        });
+    function saveForCache(id, object) {
+
+        const index = arrayObjectsData.findIndex(x => x.coinId === id);
+        if (index != -1) {   //   The object 'allCoins' already exists, so we need only update it
+            arrayObjectsData[index].content = object;
+            arrayObjectsData[index].lastClick = new Date().getTime();
+        }
+        else    //   The object 'allCoins' does not exist yet, so we need to create it. 
+            arrayObjectsData.push({ lastClick: new Date().getTime(), coinId: id, content: object });
     };
 
     function getWithAjax(toGet) {
@@ -70,8 +81,8 @@ $(document).ready(function () {
         //  Search for exact symbol:
         const coin = allCoinsArray.content.find(x => x.symbol === $("#searchInput").val().toLowerCase());   //  The symbol of the coin is in lowercase, so for the search work well we will lower the letters
         if (coin) {
-            $('#coin').empty();
-            buildCoin(coin);
+            $('#coin').empty();    //   Empty the screen before bringing the requested coin
+            buildCoin(coin);    //   After 'buildCoin', we need to activate these functions:
             coinClick();
             switchButton();
         }
@@ -116,7 +127,7 @@ $(document).ready(function () {
             buildCoin(array[i]);
         }
         keepToggleButton();    //    Activates a function that maintains the status of the toggele buttons.
-        coinClick();
+        coinClick();      //    Activate function that listen to click on the buttons 'More Info' in the cards.
         switchButton();   //    After 'keepToggleButton' function, need to activate this function, to listen to clicks on the switch Button.
         $("#searchForm").prop('hidden', false);    //   Show the search option in the list.
         $('#main>.midlle').remove();     //     Stop the animation of 'loading'.
@@ -143,9 +154,6 @@ $(document).ready(function () {
         template = template.replace("{{₪}}", coinData.market_data.current_price.ils);
         template = template.replace("{{image}}", coinData.image.small);
 
-        const index = arrayObjectsData.findIndex(x => x.coinId === coinData.id);
-        arrayObjectsData[index].content = template;   //  Save for the cache
-
         loaderCollapse('remove', coinData.id);   //   Remove the animation of loading before append the content of the collapse.
         const coin = $('#collapse-content-' + coinData.id);
         coin.append(template);
@@ -154,20 +162,15 @@ $(document).ready(function () {
     function coinClick() {
 
         $('#coin>.card>.card-body button').click(function (e) {
+
             e.preventDefault();
             const id = this.id;
             const collapseStatus = buttonName(id);   //   Change the text on the button and return the status of the collapse.
             if (collapseStatus === 'false') {
                 loaderCollapse('add', id);   //   Add animation of loading until the content get
-                const lastClick = new Date().getTime();
                 const index = arrayObjectsData.findIndex(coin => coin.coinId === id);   //   Check if the data of the coin exists in the array.
-                if (index === -1) {
-                    arrayObjectsData.push({
-                        lastClick: lastClick,
-                        coinId: id
-                    });
+                if (index === -1)
                     getWithAjax(id);
-                }
                 else {
                     cleanCoin(id);
                     const result = checkTime(id, 2 * 60);    //   Checks whether to get the content from the server or from the cache, according to the time passed from the last call (time is sent as a parameter in seconds).
@@ -207,7 +210,7 @@ $(document).ready(function () {
                 $('#collapse-' + id).parent().children().last().remove();
                 break;
         };
-    }
+    };
 
     function checkTime(element, timeInSeconds) {
 
@@ -232,13 +235,11 @@ $(document).ready(function () {
     };
 
     function getFromCache(toGet, index) {
+
         if (toGet === 'allCoins')
             getList(arrayObjectsData[index].content);
-        else {
-            loaderCollapse('remove', toGet);    //   Remove the animation of loading before append the content of the collapse.
-            const coin = $('#collapse-content-' + toGet);
-            coin.append(arrayObjectsData[index].content);
-        };
+        else
+            getCollapse(arrayObjectsData[index].content);
     };
 
     var switchArray = [];
@@ -257,44 +258,10 @@ $(document).ready(function () {
                 switchArray.splice($.inArray(this.id, switchArray), 1);
         });
     };
-
-    const templateWindow = `
-        <form class="container" id="form">
-            <p>You have too much coins reports, remove one!</p>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="report" id="report1" value="{{coin1}}">
-                <label class="form-check-label" for="report1">Remove {{coin1}}</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="report" id="report2" value="{{coin2}}">
-                <label class="form-check-label" for="report2">Remove {{coin2}}</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="report" id="report3" value="{{coin3}}">
-                <label class="form-check-label" for="report3">Remove {{coin3}}</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="report" id="report4" value="{{coin4}}">
-                <label class="form-check-label" for="report4">Remove {{coin4}}</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="report" id="report5" value="{{coin5}}">
-                <label class="form-check-label" for="report5">Remove {{coin5}}</label>
-            </div>
-            <button onclick="window.close()" id="removeCoinButton">Remove</button>
-            <button onclick="window.close()">Cancle</button>
-        </form>
-        `;
-
+    
     function openWindow(coinToAdd) {
 
-        let template = templateWindow;
-        template = template.replace(/{{coin1}}/g, switchArray[0]);
-        template = template.replace(/{{coin2}}/g, switchArray[1]);
-        template = template.replace(/{{coin3}}/g, switchArray[2]);
-        template = template.replace(/{{coin4}}/g, switchArray[3]);
-        template = template.replace(/{{coin5}}/g, switchArray[4]);
-
+        const template = buildTemplateWindow();
         const myWindow = window.open("", "MsgWindow", "width=400, height=300, top=300, left=300");
         myWindow.document.write(template);
 
@@ -302,14 +269,41 @@ $(document).ready(function () {
         windowBody.find("#removeCoinButton").click(function (e) {
             e.preventDefault();
             const coinToRemove = windowBody.find('input[name=report]:checked', '#Form').val();
-            switchArray.splice($.inArray(coinToRemove, switchArray), 1);
-            switchArray.push(coinToAdd);
-            $('#' + coinToRemove).click();   //   To cancel the previous click on the screen.
-            switchArray.push(coinToAdd);  //  The click in the previous row delete the latest from the array, so we need to add him another time! 
+            arrangeSwitchArray(coinToRemove, coinToAdd);
         });
     };
 
+    function buildTemplateWindow() {
+
+        let templateWindow = `
+            <form class="container" id="form">
+                <p>You have too much coins reports, remove one!</p>`;
+        for (let i = 0; i < switchArray.length; i++) {
+            let templateCoin = `
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="report" id="r-{{coin}}" value="{{coin}}">
+                    <label class="form-check-label" for="r-{{coin}}">Remove {{coin}}</label>
+                </div>`;
+            templateCoin = templateCoin.replace(/{{coin}}/g, switchArray[i]);
+            templateWindow += templateCoin;
+        };
+        templateWindow += `
+                <button onclick="window.close()" id="removeCoinButton">Remove</button>
+                <button onclick="window.close()">Cancle</button>
+            </form>`;
+        return templateWindow;
+    };
+
+    function arrangeSwitchArray(coinToRemove, coinToAdd) {
+
+        switchArray.splice($.inArray(coinToRemove, switchArray), 1);
+        switchArray.push(coinToAdd);
+        $('#' + coinToRemove).click();   //   To cancel the previous click on the screen.
+        switchArray.push(coinToAdd);  //  The click in the previous row delete the latest from the array, so we need to add him another time! 
+    };
+
     function keepToggleButton() {
+
         if (switchArray) {
             for (let i = 0; i < switchArray.length; i++) {
                 $('#' + (switchArray[i].toLowerCase())).click();
@@ -320,6 +314,7 @@ $(document).ready(function () {
     var interval;
 
     $('#navbarSupportedContent>ul>li>a').click(function (e) {
+
         e.preventDefault();
         if (interval)    //   If 'interval' exists, then switching to another page, should stop it.
             clearInterval(interval);

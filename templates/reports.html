@@ -10,10 +10,8 @@
         }
         else {
             const reportsArray = Object.entries(reportsObject);
-
             if (saveData.length === 0)
                 showReports(reportsArray);   //   This function Should be activated only one time, when click on 'Live Reports', to upload the graph.
-
             saveDataPoints(reportsArray);
         };
     };
@@ -26,7 +24,7 @@
             const priceNow = { 'x': new Date(), 'y': price }
             saveData[i].dataPoints.push(priceNow);    //   Update the global variable with new data every time it comes
         };
-    }
+    };
 
     function showReports(reportsArray) {
 
@@ -73,28 +71,27 @@
 
         chart = new CanvasJS.Chart("chartContainer", options);
 
-        function toggleDataSeries(e) {
-            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                e.dataSeries.visible = false;
-            } else {
-                e.dataSeries.visible = true;
-            }
-            e.chart.render();
-        };
-
-        $('.midlle').remove();
-
         setInterval(() => {
             chart.render();
         }, 2000);
 
-    }
+        $('.midlle').remove();
+    };
+
+    function toggleDataSeries(e) {
+
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        e.chart.render();
+    };
 
     function templateReports(reportsArray) {
+
         for (let i = 0; i < reportsArray.length; i++) {
-
             const coin = reportsArray[i][0];
-
             let templateData = `{
                 "type": "spline",
                 "name": "{{name}}",
@@ -104,13 +101,11 @@
                 "dataPoints": [
                 ]
             }`;
-
             templateData = templateData.replace("{{name}}", coin);
             templateData = JSON.parse(templateData);
             saveData.push(templateData);
-        }
-
-    }
+        };
+    };
 
 </script>
 

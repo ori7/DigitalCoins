@@ -21,7 +21,7 @@ $(document).ready(function () {
         });
     };
 
-    function buildUrl(toGet){
+    function buildUrl(toGet) {
 
         if (toGet === 'allCoins') {
             var url = 'https://api.coingecko.com/api/v3/coins/list';
@@ -249,16 +249,15 @@ $(document).ready(function () {
         $('#coin>.card>.card-body .switch>.default').change(function (e) {
             e.preventDefault();
             if (this.checked) {
-                if (switchArray.length < 5)
-                    switchArray.push(this.id);
-                else
-                    openWindow(this.id);
+                switchArray.push(this.id);
+                if (switchArray.length > 5)
+                    openWindow(this.id); console.log(switchArray);
             }
             else
                 switchArray.splice($.inArray(this.id, switchArray), 1);
         });
     };
-    
+
     function openWindow(coinToAdd) {
 
         const template = buildTemplateWindow();
@@ -269,7 +268,7 @@ $(document).ready(function () {
         windowBody.find("#removeCoinButton").click(function (e) {
             e.preventDefault();
             const coinToRemove = windowBody.find('input[name=report]:checked', '#Form').val();
-            arrangeSwitchArray(coinToRemove, coinToAdd);
+            arrangeSwitchArray(coinToRemove, coinToAdd); console.log(switchArray);
         });
     };
 
@@ -277,12 +276,13 @@ $(document).ready(function () {
 
         let templateWindow = `
             <form class="container" id="form">
-                <p>You have too much coins reports, remove one!</p>`;
-        for (let i = 0; i < switchArray.length; i++) {
+                <h3>You have too much coins reports, remove one!</h3>`;
+        for (let i = 0; i < switchArray.length-1; i++) {
             let templateCoin = `
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="report" id="r-{{coin}}" value="{{coin}}">
                     <label class="form-check-label" for="r-{{coin}}">Remove {{coin}}</label>
+                    <br><br>
                 </div>`;
             templateCoin = templateCoin.replace(/{{coin}}/g, switchArray[i]);
             templateWindow += templateCoin;
@@ -296,10 +296,9 @@ $(document).ready(function () {
 
     function arrangeSwitchArray(coinToRemove, coinToAdd) {
 
-        switchArray.splice($.inArray(coinToRemove, switchArray), 1);
-        switchArray.push(coinToAdd);
+       
+        //switchArray.push(coinToAdd);
         $('#' + coinToRemove).click();   //   To cancel the previous click on the screen.
-        switchArray.push(coinToAdd);  //  The click in the previous row delete the latest from the array, so we need to add him another time! 
     };
 
     function keepToggleButton() {

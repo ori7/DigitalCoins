@@ -71,11 +71,20 @@
 
         chart = new CanvasJS.Chart("chartContainer", options);
 
-        setInterval(() => {
+        intervalReport();
+
+        $('.midlle').remove();
+    };
+
+    function intervalReport(){
+
+        const intervalReport = setInterval(() => {
             chart.render();
         }, 2000);
 
-        $('.midlle').remove();
+        $('#navbarSupportedContent>ul>li>a').click(function (e) {
+            clearInterval(intervalReport);
+        });
     };
 
     function toggleDataSeries(e) {

@@ -24,8 +24,8 @@ $(document).ready(function () {
     function buildUrl(toGet) {
 
         if (toGet === 'allCoins') {
-            var url = 'https://api.coingecko.com/api/v3/coins/list';
-            //var url = 'demo.json';
+            //var url = 'https://api.coingecko.com/api/v3/coins/list';
+            var url = 'demo.json';
         }
         else if (Array.isArray(toGet)) {
             let coins = (toGet.join()).toUpperCase();  //   Get all the coins from the array and convert them into one string in capital letters. 
@@ -251,7 +251,7 @@ $(document).ready(function () {
             if (this.checked) {
                 switchArray.push(this.id);
                 if (switchArray.length > 5)
-                    openWindow(this.id); console.log(switchArray);
+                    openWindow(this.id);
             }
             else
                 switchArray.splice($.inArray(this.id, switchArray), 1);
@@ -261,14 +261,43 @@ $(document).ready(function () {
     function openWindow(coinToAdd) {
 
         const template = buildTemplateWindow();
-        const myWindow = window.open("", "MsgWindow", "width=400, height=300, top=300, left=300");
+        const myWindow = window.open("", "MsgWindow", "width=400, height=345, top=300, left=300, toolbar=no");
         myWindow.document.write(template);
 
+        let alreadyWritten = false;
         const windowBody = $(myWindow.document.body);
-        windowBody.find("#removeCoinButton").click(function (e) {
+        windowBody.find("button").click(function (e) {
             e.preventDefault();
-            const coinToRemove = windowBody.find('input[name=report]:checked', '#Form').val();
-            arrangeSwitchArray(coinToRemove, coinToAdd); console.log(switchArray);
+            let coinToRemove = windowBody.find('input[name=report]:checked', '#Form').val();
+            if (this.id === 'removeCoinButton') {
+                if (coinToRemove) {
+                    $('#' + coinToRemove).click();
+                    myWindow.close();
+                }
+                else if (!alreadyWritten) {
+                    myWindow.document.write('<h2>No coin selected!</h2>');
+                    alreadyWritten = true;
+                };
+            }
+            else
+                $('#' + coinToAdd).click();   //  This click is to cancel the previous click and remove this coin from the array.
+        });
+        closeWindow(myWindow);   //   This function is designed to close the popup window and arrange the array (no more than 5) when the user chooses to ignore the popup window
+    };
+
+    function closeWindow(myWindow) {
+
+        let listenToClick = true;    //   The next action should only work once. This variable is responsible for this.
+        $('a, button').click(function (e) {
+            e.preventDefault();
+            myWindow.close();
+            if (this.id != 'removeCoinButton' && this.id != 'cancleButton' && listenToClick) {
+                while (switchArray.length > 5) {
+                    const coin = switchArray[switchArray.length - 1];
+                    $('#' + coin).click();
+                };
+                listenToClick = false;
+            };
         });
     };
 
@@ -276,8 +305,8 @@ $(document).ready(function () {
 
         let templateWindow = `
             <form class="container" id="form">
-                <h3>You have too much coins reports, remove one!</h3>`;
-        for (let i = 0; i < switchArray.length-1; i++) {
+                <h2>You have too much coins reports, remove one!</h2>`;
+        for (let i = 0; i < switchArray.length - 1; i++) {
             let templateCoin = `
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="report" id="r-{{coin}}" value="{{coin}}">
@@ -288,17 +317,10 @@ $(document).ready(function () {
             templateWindow += templateCoin;
         };
         templateWindow += `
-                <button onclick="window.close()" id="removeCoinButton">Remove</button>
-                <button onclick="window.close()">Cancle</button>
+                <button id="removeCoinButton">Remove</button>
+                <button onclick="window.close()" id="cancleButton">Cancle</button>
             </form>`;
         return templateWindow;
-    };
-
-    function arrangeSwitchArray(coinToRemove, coinToAdd) {
-
-       
-        //switchArray.push(coinToAdd);
-        $('#' + coinToRemove).click();   //   To cancel the previous click on the screen.
     };
 
     function keepToggleButton() {

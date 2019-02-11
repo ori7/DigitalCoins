@@ -6,6 +6,10 @@
   background-repeat: no-repeat;
   background-size: cover;
 }
+.parallax h1 {
+  -webkit-text-stroke: 1px white;
+  font-weight: bold;
+}
 nav {
   border-top: 2px solid black;
 }

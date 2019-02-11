@@ -17,8 +17,9 @@ nav {
   margin: 0 auto;
 }
 #coin > .card {
-  margin: 2%;
+  margin: 2.16%;
   width: 29%;
+  min-width: 320px;
 }
 #coin > .card .loaderCollapse {
   border: 6px solid #f3f3f3;

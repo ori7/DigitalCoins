@@ -94,12 +94,12 @@ $(document).ready(function () {
     const coinTemplate = `
         <div class="card">
             <div class="card-body row">
-                <div class="col-sm-8">
+                <div class="col-8">
                     <h5 class="card-title">{{symbol}}</h5>
                     <p class="card-text">{{name}}</p>
                     <button id="{{id}}" class="btn btn-primary" data-toggle="collapse" data-target="#collapse-{{id}}" aria-expanded="false" aria-controls="collapseExample">More Info</button>            
                 </div>
-                <div class="col-sm-4">
+                <div class="col-4">
                     <label class="switch">
                         <input type="checkbox" class="default" id="coin-{{symbol}}">
                         <span class="slider round"></span>
@@ -135,12 +135,12 @@ $(document).ready(function () {
 
     const collapseTemplate = `
         <div class="row">
-            <div class="col-sm-9 font-weight-bold">
+            <div class="col-9 font-weight-bold">
                 <div>{{$}} $</div>
                 <div>{{€}} €</div>
                 <div>{{₪}} ₪</div>
             </div>
-            <div class="col-sm-3">
+            <div class="col-3">
                 <img src="{{image}}">
             </div>
         </div>

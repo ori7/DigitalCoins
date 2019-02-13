@@ -24,8 +24,8 @@ $(document).ready(function () {
     function buildUrl(toGet) {
 
         if (toGet === 'allCoins') {
-            //var url = 'https://api.coingecko.com/api/v3/coins/list';
-            var url = 'demo.json';
+            var url = 'https://api.coingecko.com/api/v3/coins/list';
+            //var url = 'demo.json';
         }
         else if (Array.isArray(toGet)) {
             let coins = (toGet.join()).toUpperCase();  //   Get all the coins from the array and convert them into one string in capital letters. 
@@ -366,7 +366,7 @@ $(document).ready(function () {
                 $(".optionParallax").removeClass('parallax');
                 break;
         };
-    }
+    };
 
     function reportPage() {
 
@@ -379,6 +379,6 @@ $(document).ready(function () {
                 getWithAjax(switchArray);
             }, 2000);
         };
-    }
+    };
 
 });
